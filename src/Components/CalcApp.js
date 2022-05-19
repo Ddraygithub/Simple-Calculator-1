@@ -11,11 +11,14 @@ function CalculatorApp() {
     clr: "chooseDel",
   };
 
-  const ops = ["+", "/", "-", "=", ")", "(", "*"];
+  const ops = ["+", "/", "-", "=", "*"];
 
   const reducer = (state, { type, payload }) => {
     switch (type) {
       case "chooseNum":
+        if (payload === "AC") {
+          return { ...state, curr: "", prev: "", oper: "", clrdel: "del", overload: false, sign: "", opSign: "" };
+        }
         if (state.overload) {
           return { ...state, curr: payload, prev: "", overload: false, sign: "" }
         }
@@ -30,12 +33,11 @@ function CalculatorApp() {
       case "chooseOper":
 
         if (payload === "-" && state.curr.length === 0) {
-          return { ...state, curr: payload };
+          return { ...state, curr: payload, opSign: signDisplay(payload) };
         }
         if (ops.includes(payload)) {
           if (state.prev.length > 0 && state.oper && state.curr.length === 0) {
-            console.log("we are ready")
-            return { ...state, oper: state.oper.replace(state.oper.slice(-1), payload) };
+            return { ...state, opSign: signDisplay(payload), oper: state.oper.replace(state.oper.slice(-1), payload) };
           }
           if (state.curr.length === 0) {
             return { ...state };
@@ -47,10 +49,11 @@ function CalculatorApp() {
               prev: evaluate(state.prev, state.curr, state.oper),
               curr: "",
               oper: payload,
+              opSign: signDisplay(payload)
             };
           }
         }
-        return { ...state, prev: state.curr, curr: "", oper: payload };
+        return { ...state, prev: state.curr, curr: "", oper: payload, opSign: signDisplay(payload) };
       case "chooseDel":
         if (payload === "del" && state.curr.length === 0) {
           return state;
@@ -60,14 +63,14 @@ function CalculatorApp() {
         }
 
         if (payload === "C") {
-          return { ...state, curr: "", prev: "", oper: "", clrdel: "del", overload: false, sign: "" };
+          return { ...state, curr: "", prev: "", oper: "", clrdel: "del", overload: false, sign: "", opSign: "" };
         }
         return;
       case "chooseEval":
         if (state.curr.length === 0) {
           return state;
         }
-        return { ...state, curr: "", prev: evaluate(state.prev, state.curr, state.oper), oper: "", clrdel: "C", overload: true, sign: "=" };
+        return { ...state, curr: "", prev: evaluate(state.prev, state.curr, state.oper), oper: "", clrdel: "C", overload: true, sign: "=", opSign: "" };
       default:
         return state;
     }
@@ -100,6 +103,29 @@ function CalculatorApp() {
     return calc.toString();
   };
 
+  const signDisplay = (a) => {
+    switch (a) {
+      case '/':
+        return (
+          <span>&divide;</span>
+        )
+      case '*':
+        return (
+          <span>&times;</span>
+        )
+      case '-':
+        return (
+          <span>&minus;</span>
+        )
+      case '+':
+        return (
+          <span>&#43;</span>
+        )
+      default:
+        return ""
+    }
+  }
+
 
 
   const [state, dispatch] = useReducer(reducer, {
@@ -108,7 +134,8 @@ function CalculatorApp() {
     oper: "",
     clrdel: "del",
     overload: false,
-    sign: ""
+    sign: "",
+    opSign: ""
   });
 
   const createDigit = () => {
@@ -147,11 +174,14 @@ function CalculatorApp() {
     <ManCont>
       <Container>
         <div>
+
           {/* Output display */}
+
+
           <div id="upperdsplay">
             {myNumFomat.format(state.prev)}
-            {state.oper}
-            {state.sign}
+            {state.opSign}
+            <span style={{ fontSize: "12px" }} >{state.sign}</span>
           </div>
           <div id="lowerdsplay">{myNumFomat.format(state.curr) || "0"}</div>
         </div>
@@ -159,15 +189,23 @@ function CalculatorApp() {
 
           <div id="nums">
             {createDigit()}
+    
+            <button
+              onClick={() => dispatch({ type: ACTIONS.digits, payload: "." })}
+            >
+              .
+            </button>
+
             <button
               onClick={() => dispatch({ type: ACTIONS.digits, payload: "0" })}
             >
               0
             </button>
+
             <button
-              onClick={() => dispatch({ type: ACTIONS.digits, payload: "." })}
+              onClick={() => dispatch({ type: ACTIONS.digits, payload: "AC" })}
             >
-              .
+              AC
             </button>
           </div>
           <div id="operatons">
@@ -252,12 +290,12 @@ const Container = styled.div`
     text-align: right;
     padding: 2px 5px;
     cursor: progress;
-    font-size: 25px;
+    font-size: 27px;
   }
 
   #upperdsplay {
     margin: 0px;
-    font-size: 20px;
+    font-size: 25px;
     padding-top: 10px;
   }
 
@@ -280,10 +318,11 @@ const Container = styled.div`
     }
 
     #nums {
-      border-right: 0.5px solid whitesmoke;
+      border-right: 0.5px solid gray;
       height: calc(55vh - 50px);
       display: flex;
       flex-wrap: wrap;
+      flex-direction: row-reverse;
       max-width: 70%;
 
       button {
