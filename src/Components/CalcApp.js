@@ -189,7 +189,7 @@ function CalculatorApp() {
 
           <div id="nums">
             {createDigit()}
-    
+
             <button
               onClick={() => dispatch({ type: ACTIONS.digits, payload: "." })}
             >
