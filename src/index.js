@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import CalcApp from './Components/CalcApp';
+import DrumApp from './DrumApp';
 
 
-ReactDOM.render(<CalcApp />,
+ReactDOM.render(<DrumApp />,
   document.getElementById('root')
 );
 
